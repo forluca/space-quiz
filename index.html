@@ -160,6 +160,21 @@
       { category: "The great beyond", question: "Which spacecraft was the first to enter interstellar space?", answers: ["New Horizons", "Voyager 1", "Pioneer 11", "Cassini"], correct: 1, fact: "Voyager 1 crossed the heliopause in August 2012, becoming the first spacecraft to reach interstellar space." }
     ];
     const $ = id => document.getElementById(id);
+    function shuffle(items) {
+      const shuffled = [...items];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+    function createQuizQuestions() {
+      return shuffle(questions).map(item => {
+        const answers = shuffle(item.answers.map((text, i) => ({ text, correct: i === item.correct })));
+        return { ...item, answers: answers.map(answer => answer.text), correct: answers.findIndex(answer => answer.correct) };
+      });
+    }
+    let quizQuestions = createQuizQuestions();
     let index = 0;
     let score = 0;
     let answered = false;
@@ -167,7 +182,7 @@
 
     function renderQuestion(focus = false) {
       answered = false;
-      const item = questions[index];
+      const item = quizQuestions[index];
       $("question-count").innerHTML = `<strong>Question ${String(index + 1).padStart(2, "0")}</strong> / 10`;
       $("category").textContent = item.category;
       $("question").textContent = item.question;
@@ -192,7 +207,7 @@
     function selectAnswer(selected) {
       if (answered) return;
       answered = true;
-      const item = questions[index];
+      const item = quizQuestions[index];
       const correct = selected === item.correct;
       history.push(correct);
       if (correct) score++;
@@ -240,10 +255,11 @@
 
     $("next").addEventListener("click", () => {
       if (!answered) return;
-      if (index === questions.length - 1) showResults();
+      if (index === quizQuestions.length - 1) showResults();
       else { index++; renderQuestion(true); }
     });
     $("restart").addEventListener("click", () => {
+      quizQuestions = createQuizQuestions();
       index = 0; score = 0; history = [];
       $("score").textContent = "0 points";
       $("progress").value = 0;
